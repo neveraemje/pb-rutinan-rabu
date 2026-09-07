@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { RotateCcw } from "lucide-react";
 import type {
   Expense,
@@ -119,6 +119,70 @@ export default function ClubApp() {
     [selectedExpense, setSelectedExpense] = useState<string | null>(null),
     [error, setError] = useState(""),
     [toast, setToast] = useState("");
+  const navigationRef = useRef({
+    tab,
+    sheet,
+    editingSession: Boolean(sessionForm.id),
+    editingExpense: Boolean(expenseForm.id),
+  });
+  useEffect(() => {
+    navigationRef.current = {
+      tab,
+      sheet,
+      editingSession: Boolean(sessionForm.id),
+      editingExpense: Boolean(expenseForm.id),
+    };
+  }, [tab, sheet, sessionForm.id, expenseForm.id]);
+  useEffect(() => {
+    const rootState = { ...(history.state ?? {}), pbRutinanRoot: true };
+    history.replaceState(rootState, "");
+    history.pushState({ ...rootState, pbRutinanGuard: true }, "");
+
+    const handlePhoneBack = () => {
+      const current = navigationRef.current;
+      let handled = true;
+
+      switch (current.sheet) {
+        case "session":
+          setSheetState(current.editingSession ? "sessionDetail" : null);
+          break;
+        case "expense":
+          setSheetState(current.editingExpense ? "expenseDetail" : null);
+          break;
+        case "payment":
+        case "deleteSession":
+        case "participants":
+          setSheetState("sessionDetail");
+          break;
+        case "deleteParticipant":
+          setSheetState("payment");
+          break;
+        case "member":
+        case "deleteMember":
+        case "expenseDetail":
+        case "sessionDetail":
+        case "reset":
+          setSheetState(null);
+          break;
+        default:
+          if (current.tab !== "Beranda") {
+            setTabState("Beranda");
+            setFilter("Semua");
+          } else {
+            handled = false;
+          }
+      }
+
+      if (handled) {
+        history.pushState({ ...rootState, pbRutinanGuard: true }, "");
+      } else {
+        history.back();
+      }
+    };
+
+    addEventListener("popstate", handlePhoneBack);
+    return () => removeEventListener("popstate", handlePhoneBack);
+  }, []);
   useEffect(() => {
     let active = true;
     void loadClubData()
