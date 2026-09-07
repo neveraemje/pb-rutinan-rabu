@@ -417,6 +417,9 @@ export function PaymentSheet({
     ? (String(form.amount) as Choice)
     : "other";
   const [choice, setChoice] = useState<Choice>(preset);
+  const [otherAmount, setOtherAmount] = useState(
+    preset === "other" ? String(form.amount) : "0",
+  );
   if (!open || !member) return null;
   const options: { value: Choice; label: string; amount?: number }[] = [
     { value: "0", label: "Belum Bayar", amount: 0 },
@@ -428,8 +431,12 @@ export function PaymentSheet({
   ];
   const choose = (option: (typeof options)[number]) => {
     setChoice(option.value);
-    if (option.amount !== undefined)
+    if (option.amount !== undefined) {
       setForm({ ...form, amount: option.amount });
+      return;
+    }
+    const amount = otherAmount === "" ? 0 : Number(otherAmount);
+    setForm({ ...form, amount: Number.isFinite(amount) ? amount : 0 });
   };
   return (
     <div className="fixed inset-y-0 left-1/2 z-[90] flex w-full max-w-[393px] -translate-x-1/2 items-end bg-black/50">
@@ -470,10 +477,18 @@ export function PaymentSheet({
               aria-label="Nominal lainnya"
               type="number"
               min="0"
-              value={form.amount}
-              onChange={(e) =>
-                setForm({ ...form, amount: Math.max(0, +e.target.value) })
-              }
+              inputMode="numeric"
+              placeholder="0"
+              value={otherAmount}
+              onChange={(e) => {
+                const raw = e.target.value;
+                setOtherAmount(raw);
+                const amount = raw === "" ? 0 : Number(raw);
+                setForm({
+                  ...form,
+                  amount: Number.isFinite(amount) ? Math.max(0, amount) : 0,
+                });
+              }}
               className="h-14 w-full rounded-2xl border border-[#5445ff] bg-[#f2f2f2] pl-12 pr-4 text-lg outline-none"
             />
           </div>

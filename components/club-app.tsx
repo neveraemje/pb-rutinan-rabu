@@ -10,7 +10,7 @@ import type {
 } from "@/lib/types";
 import { cloneSeed, loadData, resetData, saveData } from "@/lib/storage";
 import { loadClubData, saveClubData } from "@/lib/database";
-import { participantHasPayments, sessionHasPayments } from "@/lib/calculations";
+import { sessionHasPayments } from "@/lib/calculations";
 import { Button, Sheet } from "@/components/ui-kit";
 import {
   AppBottomNav,
@@ -221,20 +221,14 @@ export default function ClubApp() {
       id = sessionForm.id || uid("s"),
       saved = { ...sessionForm, id, participantIds: ids };
     if (sessionForm.id) {
-      const old = data.sessions.find((x) => x.id === sessionForm.id)!;
-      if (
-        old.participantIds.some(
-          (memberId) =>
-            !ids.includes(memberId) &&
-            participantHasPayments(data, old.id, memberId),
-        )
-      )
-        return setError(
-          "Peserta dengan riwayat pembayaran tidak dapat dihapus dari jadwal.",
-        );
+      const selectedIds = new Set(ids);
       setData((d) => ({
         ...d,
         sessions: d.sessions.map((x) => (x.id === id ? saved : x)),
+        payments: d.payments.filter(
+          (payment) =>
+            payment.sessionId !== id || selectedIds.has(payment.memberId),
+        ),
       }));
     } else setData((d) => ({ ...d, sessions: [...d.sessions, saved] }));
     setSelectedSession(id);
@@ -314,8 +308,18 @@ export default function ClubApp() {
     memberId: string,
     payment?: Payment,
   ) => {
+    const savedPayment =
+      payment ??
+      data.payments
+        .filter(
+          (item) =>
+            item.sessionId === sessionId && item.memberId === memberId,
+        )
+        .at(-1);
     setPaymentForm(
-      payment ? { ...payment } : { ...blankPayment(), sessionId, memberId },
+      savedPayment
+        ? { ...savedPayment }
+        : { ...blankPayment(), sessionId, memberId },
     );
     setError("");
     setSheet("payment");
@@ -328,12 +332,23 @@ export default function ClubApp() {
       !paymentForm.date
     )
       return setError("Tanggal dan nominal pembayaran wajib valid.");
-    setData((d) => ({
-      ...d,
-      payments: paymentForm.id
-        ? d.payments.map((x) => (x.id === paymentForm.id ? paymentForm : x))
-        : [...d.payments, { ...paymentForm, id: uid("p") }],
-    }));
+    setData((d) => {
+      const otherPayments = d.payments.filter(
+        (item) =>
+          item.sessionId !== paymentForm.sessionId ||
+          item.memberId !== paymentForm.memberId,
+      );
+      return {
+        ...d,
+        payments:
+          paymentForm.amount === 0
+            ? otherPayments
+            : [
+                ...otherPayments,
+                { ...paymentForm, id: paymentForm.id || uid("p") },
+              ],
+      };
+    });
     setError("");
     setToast("Pembayaran berhasil disimpan");
     setSheet("sessionDetail");
@@ -356,26 +371,29 @@ export default function ClubApp() {
           ? { ...session, participantIds: session.participantIds.filter((id) => id !== paymentForm.memberId) }
           : session,
       ),
+      payments: current.payments.filter(
+        (payment) =>
+          payment.sessionId !== activeSession.id ||
+          payment.memberId !== paymentForm.memberId,
+      ),
     }));
     setToast("Peserta berhasil dihapus");
     setSheet("sessionDetail");
   };
   const saveParticipants = (ids: string[]) => {
     if (!activeSession) return;
-    if (
-      activeSession.participantIds.some(
-        (id) =>
-          !ids.includes(id) &&
-          participantHasPayments(data, activeSession.id, id),
-      )
-    )
-      return setError("Peserta dengan riwayat pembayaran tidak dapat dihapus.");
+    const selectedIds = new Set(ids);
     setData((d) => ({
       ...d,
       sessions: d.sessions.map((x) =>
         x.id === activeSession.id
           ? { ...x, participantIds: [...new Set(ids)] }
           : x,
+      ),
+      payments: d.payments.filter(
+        (payment) =>
+          payment.sessionId !== activeSession.id ||
+          selectedIds.has(payment.memberId),
       ),
     }));
     setToast("Peserta berhasil disimpan");
@@ -507,7 +525,7 @@ export default function ClubApp() {
         <DeleteParticipantSheet
           open={sheet === "deleteParticipant"}
           member={data.members.find((m) => m.id === paymentForm.memberId)}
-          blocked={participantHasPayments(data, activeSession.id, paymentForm.memberId)}
+          blocked={false}
           onClose={() => setSheet("payment")}
           onDelete={removeParticipant}
         />
