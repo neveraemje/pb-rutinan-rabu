@@ -1,7 +1,7 @@
 import type { ClubData } from "./types";
 import { seedData } from "./seed";
 
-const KEY = "pb-rutinan-rabu-demo-v1";
+const KEY = "pb-rutinan-rabu-v2";
 export const cloneSeed = (): ClubData => JSON.parse(JSON.stringify(seedData));
 export const loadData = (): ClubData => {
   if (typeof window === "undefined") return cloneSeed();
@@ -9,4 +9,3 @@ export const loadData = (): ClubData => {
 };
 export const saveData = (data: ClubData) => localStorage.setItem(KEY, JSON.stringify(data));
 export const resetData = () => { const data = cloneSeed(); saveData(data); return data; };
-
