@@ -25,7 +25,7 @@ export function Button({
       className={`inline-flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition disabled:pointer-events-none disabled:opacity-45 ${styles[variant]} ${className}`}
       {...props}
     />
-  ); //jos
+  ); //josgf
 }
 export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
   return (
