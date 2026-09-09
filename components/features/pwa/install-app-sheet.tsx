@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, MoreVertical, Share2, Smartphone, X } from "lucide-react";
+import { Apple, Download, Smartphone, X } from "lucide-react";
 
 interface InstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -97,18 +97,32 @@ export function InstallAppSheet({
 
         <div className="mt-6 grid gap-3">
           <Instruction
-            icon={<MoreVertical size={22} />}
+            icon={<AndroidIcon />}
             title="Android (Chrome)"
             text='Ketuk menu ⋮, lalu pilih “Tambahkan ke layar utama” atau “Instal aplikasi”.'
           />
           <Instruction
-            icon={<Share2 size={21} />}
+            icon={<Apple size={23} strokeWidth={2.25} />}
             title="iPhone (Safari)"
             text='Ketuk Bagikan, lalu pilih “Tambahkan ke Layar Utama” dan tekan Tambah.'
           />
         </div>
       </section>
     </div>
+  );
+}
+
+function AndroidIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="24"
+      height="24"
+      aria-hidden="true"
+      fill="currentColor"
+    >
+      <path d="m7.2 7.1-1.3-2.2.8-.5L8 6.6A8.1 8.1 0 0 1 12 5.5c1.5 0 2.8.4 4 1.1l1.3-2.2.8.5-1.3 2.2A6.4 6.4 0 0 1 19 12H5c0-2 .8-3.7 2.2-4.9ZM8.5 9.4a.8.8 0 1 0 0-1.6.8.8 0 0 0 0 1.6Zm7 0a.8.8 0 1 0 0-1.6.8.8 0 0 0 0 1.6ZM5 13h14v6.2c0 1-.8 1.8-1.8 1.8h-.7v2h-2v-2h-5v2h-2v-2h-.7c-1 0-1.8-.8-1.8-1.8V13Zm-3 1.2c0-.7.6-1.2 1.2-1.2H4v6h-.8c-.6 0-1.2-.5-1.2-1.2v-3.6ZM20 13h.8c.6 0 1.2.5 1.2 1.2v3.6c0 .7-.6 1.2-1.2 1.2H20v-6Z" />
+    </svg>
   );
 }
 
