@@ -123,8 +123,8 @@ export function CreateSessionScreen({
     form.venue,
   );
   const venues = [
-    ["Platinum KT", "GOR Platinum Karya Timur"],
-    ["Four SC", "Four Sport Center"],
+    ["Platinum Karya Timur", "GOR Platinum Karya Timur"],
+    ["Four Sport Center", "Four Sport Center"],
     ["Lainnya", custom ? form.venue : "Lapangan lainnya"],
   ];
   const add = () => {
@@ -286,20 +286,23 @@ export function DetailSessionScreen({
   onParticipants: () => void;
 }) {
   if (!open) return null;
-  const venue =
-    session.venue === "GOR Platinum Karya Timur"
-      ? "Platinum KT"
-      : session.venue === "Four Sport Center"
-        ? "Four SC"
-        : session.venue;
+  const isPlatinum = session.venue === "GOR Platinum Karya Timur";
+  const isFourSport = session.venue === "Four Sport Center";
+  const venue = isPlatinum ? "Platinum Karya Timur" : session.venue;
+  const courtImage = isPlatinum
+    ? "/court-platinum-karya-timur.png"
+    : isFourSport
+      ? "/court-four-sport-center.png"
+      : "/sut.png";
   return (
     <div className="fixed inset-y-0 left-1/2 z-50 w-full max-w-[393px] -translate-x-1/2 overflow-y-auto bg-white">
       <section className="relative h-[181px] overflow-hidden">
         <Image
-          src="/sut.png"
-          alt="Lapangan badminton"
+          src={courtImage}
+          alt={`Lapangan badminton ${venue}`}
           fill
           priority
+          sizes="393px"
           className="object-cover"
         />
         <div className="absolute inset-x-0 bottom-0 h-[90px] bg-gradient-to-t from-white to-transparent" />
