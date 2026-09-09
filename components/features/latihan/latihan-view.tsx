@@ -1,10 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import {
   ArrowLeft,
+  Camera,
   CalendarDays,
   ChevronRight,
+  LoaderCircle,
   Pencil,
   Plus,
   Trash2,
@@ -285,6 +287,9 @@ export function DetailSessionScreen({
   onPayment: (sid: string, mid: string, p?: Payment) => void;
   onParticipants: () => void;
 }) {
+  const screenshotRef = useRef<HTMLDivElement>(null);
+  const [capturing, setCapturing] = useState(false);
+  const [captureMessage, setCaptureMessage] = useState("");
   if (!open) return null;
   const isPlatinum = session.venue === "GOR Platinum Karya Timur";
   const isFourSport = session.venue === "Four Sport Center";
@@ -294,8 +299,45 @@ export function DetailSessionScreen({
     : isFourSport
       ? "/court-four-sport-center.png"
       : "/sut.png";
+  const captureFullDetail = async () => {
+    const element = screenshotRef.current;
+    if (!element || capturing) return;
+    setCapturing(true);
+    try {
+      const { toPng } = await import("html-to-image");
+      const width = element.scrollWidth;
+      const height = element.scrollHeight;
+      const dataUrl = await toPng(element, {
+        cacheBust: true,
+        pixelRatio: 2,
+        width,
+        height,
+        style: {
+          height: `${height}px`,
+          maxHeight: "none",
+          overflow: "visible",
+          position: "relative",
+          transform: "none",
+        },
+      });
+      const link = document.createElement("a");
+      const safeVenue = venue.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      link.download = `latihan-${session.date}-${safeVenue}.png`;
+      link.href = dataUrl;
+      link.click();
+      setCaptureMessage("Screenshot berhasil diunduh");
+    } catch {
+      setCaptureMessage("Screenshot gagal dibuat");
+    } finally {
+      setCapturing(false);
+      window.setTimeout(() => setCaptureMessage(""), 2400);
+    }
+  };
   return (
-    <div className="fixed inset-y-0 left-1/2 z-50 w-full max-w-[393px] -translate-x-1/2 overflow-y-auto bg-white">
+    <div
+      ref={screenshotRef}
+      className="fixed inset-y-0 left-1/2 z-50 w-full max-w-[393px] -translate-x-1/2 overflow-y-auto bg-white"
+    >
       <section className="relative h-[181px] overflow-hidden">
         <Image
           src={courtImage}
@@ -319,6 +361,19 @@ export function DetailSessionScreen({
             className="flex h-10 items-center gap-2 rounded-full bg-white px-4 font-semibold shadow"
           >
             <Pencil size={20} /> Edit
+          </button>
+          <button
+            onClick={captureFullDetail}
+            disabled={capturing}
+            aria-label="Unduh screenshot detail latihan"
+            title="Unduh screenshot"
+            className="ml-2 grid size-10 place-items-center rounded-full bg-white shadow disabled:opacity-60"
+          >
+            {capturing ? (
+              <LoaderCircle className="animate-spin" size={20} />
+            ) : (
+              <Camera size={20} />
+            )}
           </button>
           <button
             onClick={onDelete}
@@ -394,6 +449,11 @@ export function DetailSessionScreen({
         <WalletCards className="text-slate-800" />+
         {shortRupiah(sessionIncome(data, session.id))}
       </div>
+      {captureMessage && (
+        <div className="fixed bottom-6 left-1/2 z-[120] -translate-x-1/2 whitespace-nowrap rounded-full bg-slate-900 px-4 py-2 text-sm text-white shadow-lg">
+          {captureMessage}
+        </div>
+      )}
     </div>
   );
 }
