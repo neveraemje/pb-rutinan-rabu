@@ -373,7 +373,15 @@ export function DetailSessionScreen({
                   </span>
                 )}
               </span>
-              <PaymentStatus paid={paid} fee={session.fee} />
+              <PaymentStatus
+                paid={paid}
+                fee={session.fee}
+                recorded={data.payments.some(
+                  (payment) =>
+                    payment.sessionId === session.id &&
+                    payment.memberId === id,
+                )}
+              />
               <ChevronRight />
             </button>
           );
@@ -406,14 +414,16 @@ export function PaymentSheet({
   setForm: (p: Payment) => void;
   error: string;
   onClose: () => void;
-  onSave: () => void;
+  onSave: (recordPayment: boolean) => void;
   onDelete: () => void;
   onRemoveParticipant: () => void;
 }) {
   type Choice = "0" | "20000" | "30000" | "40000" | "50000" | "other";
-  const preset = ([0, 20000, 30000, 40000, 50000] as const).includes(
-    form.amount as 0 | 20000 | 30000 | 40000 | 50000,
-  )
+  const preset = form.id && form.amount === 0
+    ? "other"
+    : ([0, 20000, 30000, 40000, 50000] as const).includes(
+          form.amount as 0 | 20000 | 30000 | 40000 | 50000,
+        )
     ? (String(form.amount) as Choice)
     : "other";
   const [choice, setChoice] = useState<Choice>(preset);
@@ -502,7 +512,7 @@ export function PaymentSheet({
             <Trash2 size={18} /> Hapus Peserta
           </button>
           <button
-            onClick={onSave}
+            onClick={() => onSave(choice !== "0")}
             className="h-12 rounded-full bg-gradient-to-b from-[#7d87ff] to-[#3929b5] font-bold text-white"
           >
             Simpan

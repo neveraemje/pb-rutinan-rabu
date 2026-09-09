@@ -198,8 +198,16 @@ export function Avatar({
   );
 }
 
-export function PaymentStatus({ paid, fee }: { paid: number; fee: number }) {
-  const status = paymentStatus(paid, fee);
+export function PaymentStatus({
+  paid,
+  fee,
+  recorded = paid > 0,
+}: {
+  paid: number;
+  fee: number;
+  recorded?: boolean;
+}) {
+  const status = paymentStatus(paid, fee, recorded);
   return (
     <span
       className={`rounded-full px-2 py-1 text-[10px] font-bold ${status === "Sudah Bayar" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}

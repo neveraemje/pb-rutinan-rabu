@@ -388,7 +388,7 @@ export default function ClubApp() {
     setError("");
     setSheet("payment");
   };
-  const savePaymentForm = () => {
+  const savePaymentForm = (recordPayment: boolean) => {
     if (
       !activeSession ||
       !Number.isFinite(paymentForm.amount) ||
@@ -405,7 +405,7 @@ export default function ClubApp() {
       return {
         ...d,
         payments:
-          paymentForm.amount === 0
+          !recordPayment
             ? otherPayments
             : [
                 ...otherPayments,
