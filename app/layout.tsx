@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { PwaSplash } from "@/components/features/pwa/pwa-splash";
 import "./globals.css";
 
 const title = "PB Rutinan Rabu";
@@ -58,7 +59,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#4169dc",
+  themeColor: "#3b66d8",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -68,6 +69,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         suppressHydrationWarning
         className="bg-slate-100 antialiased"
       >
+        <PwaSplash />
         {children}
       </body>
     </html>
