@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { Download } from "lucide-react";
 import type { ClubData, TrainingType } from "@/lib/types";
 import { paymentStatus, totals } from "@/lib/calculations";
 
@@ -9,7 +10,13 @@ export const TODAY = "2026-09-06";
 export const uid = (prefix: string) =>
   `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
-export function AppHeader({ data }: { data: ClubData }) {
+export function AppHeader({
+  data,
+  onInstall,
+}: {
+  data: ClubData;
+  onInstall: () => void;
+}) {
   const all = totals(data),
     rabuan = totals(data, "Rabuan"),
     sabtuan = totals(data, "Sabtuan");
@@ -34,6 +41,15 @@ export function AppHeader({ data }: { data: ClubData }) {
         />
         PB Rutinan Rabu
       </div>
+      <button
+        type="button"
+        onClick={onInstall}
+        aria-label="Pasang Aplikasi"
+        title="Pasang Aplikasi"
+        className="absolute right-4 top-8 grid size-10 place-items-center rounded-full bg-white/15 text-white backdrop-blur-sm transition hover:bg-white/25 active:scale-95"
+      >
+        <Download size={21} />
+      </button>
 
       <div className="absolute inset-x-6 top-[77px] flex flex-col gap-6 mt-14">
         {/* <div className="flex items-start gap-1">

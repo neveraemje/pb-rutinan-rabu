@@ -40,6 +40,7 @@ import {
   PaymentSheet,
 } from "@/components/features/latihan/latihan-view";
 import { QrisView } from "@/components/features/qris/qris-view";
+import { InstallAppSheet } from "@/components/features/pwa/install-app-sheet";
 
 type SheetName =
   | "session"
@@ -53,6 +54,7 @@ type SheetName =
   | "participants"
   | "deleteParticipant"
   | "reset"
+  | "install"
   | null;
 const blankSession = (): Session => ({
   id: "",
@@ -162,6 +164,7 @@ export default function ClubApp() {
         case "expenseDetail":
         case "sessionDetail":
         case "reset":
+        case "install":
           setSheetState(null);
           break;
         default:
@@ -466,7 +469,9 @@ export default function ClubApp() {
   const hasHeader = tab === "Beranda" || tab === "Jadwal";
   return (
     <main className="app-shell relative mx-auto min-h-dvh w-full max-w-[393px] overflow-x-hidden bg-[#f7f7fb] pb-24 text-slate-900 shadow-[0_0_40px_rgb(15_23_42/0.08)]">
-      {hasHeader && <AppHeader data={data} />}
+      {hasHeader && (
+        <AppHeader data={data} onInstall={() => setSheet("install")} />
+      )}
       <div
         className={`relative z-10 min-h-[65dvh] bg-white pb-4 ${hasHeader ? "-mt-18 rounded-t-[28px] px-4 pt-3" : "px-0 pt-0"}`}
       >
@@ -667,6 +672,11 @@ export default function ClubApp() {
           </div>
         </div>
       </Sheet>
+      <InstallAppSheet
+        open={sheet === "install"}
+        onClose={() => setSheet(null)}
+        onToast={setToast}
+      />
     </main>
   );
 }
