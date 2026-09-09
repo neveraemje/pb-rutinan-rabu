@@ -305,7 +305,7 @@ export function DetailSessionScreen({
     setCapturing(true);
     try {
       const { toPng } = await import("html-to-image");
-      const width = element.scrollWidth;
+      const width = element.offsetWidth;
       const height = element.scrollHeight;
       const dataUrl = await toPng(element, {
         backgroundColor: "#ffffff",
@@ -315,15 +315,9 @@ export function DetailSessionScreen({
         height,
         style: {
           height: `${height}px`,
-          inset: "auto",
-          left: "0",
           maxHeight: "none",
           maxWidth: "none",
           overflow: "visible",
-          position: "relative",
-          right: "auto",
-          top: "0",
-          transform: "none",
           width: `${width}px`,
         },
       });
@@ -341,10 +335,8 @@ export function DetailSessionScreen({
     }
   };
   return (
-    <div
-      ref={screenshotRef}
-      className="fixed inset-y-0 left-1/2 z-50 w-full max-w-[393px] -translate-x-1/2 overflow-y-auto bg-white"
-    >
+    <div className="fixed inset-y-0 left-1/2 z-50 w-full max-w-[393px] -translate-x-1/2 overflow-y-auto bg-white">
+      <div ref={screenshotRef} className="min-h-full w-full bg-white">
       <section className="relative h-[181px] overflow-hidden">
         <Image
           src={courtImage}
@@ -455,6 +447,7 @@ export function DetailSessionScreen({
       <div className="flex h-[65px] items-center gap-2 border-b px-4 text-xl font-bold text-[#039a12]">
         <WalletCards className="text-slate-800" />+
         {shortRupiah(sessionIncome(data, session.id))}
+      </div>
       </div>
       {captureMessage && (
         <div className="fixed bottom-6 left-1/2 z-[120] -translate-x-1/2 whitespace-nowrap rounded-full bg-slate-900 px-4 py-2 text-sm text-white shadow-lg">
