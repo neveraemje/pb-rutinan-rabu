@@ -358,6 +358,10 @@ export function DetailSessionScreen({
           const member = data.members.find((m) => m.id === id);
           if (!member) return null;
           const paid = paidFor(data, session.id, id);
+          const recorded = data.payments.some(
+            (payment) =>
+              payment.sessionId === session.id && payment.memberId === id,
+          );
           return (
             <button
               key={id}
@@ -367,7 +371,7 @@ export function DetailSessionScreen({
               <Avatar name={member.name} />
               <span className="min-w-0 flex-1">
                 <b className="block truncate">{member.name}</b>
-                {paid > 0 && (
+                {recorded && (
                   <span className="text-xs text-[#8b8b8b]">
                     {shortRupiah(paid)}
                   </span>
@@ -376,11 +380,7 @@ export function DetailSessionScreen({
               <PaymentStatus
                 paid={paid}
                 fee={session.fee}
-                recorded={data.payments.some(
-                  (payment) =>
-                    payment.sessionId === session.id &&
-                    payment.memberId === id,
-                )}
+                recorded={recorded}
               />
               <ChevronRight />
             </button>
