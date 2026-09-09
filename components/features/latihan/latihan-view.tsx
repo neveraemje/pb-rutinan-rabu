@@ -308,16 +308,23 @@ export function DetailSessionScreen({
       const width = element.scrollWidth;
       const height = element.scrollHeight;
       const dataUrl = await toPng(element, {
+        backgroundColor: "#ffffff",
         cacheBust: true,
         pixelRatio: 2,
         width,
         height,
         style: {
           height: `${height}px`,
+          inset: "auto",
+          left: "0",
           maxHeight: "none",
+          maxWidth: "none",
           overflow: "visible",
           position: "relative",
+          right: "auto",
+          top: "0",
           transform: "none",
+          width: `${width}px`,
         },
       });
       const link = document.createElement("a");
