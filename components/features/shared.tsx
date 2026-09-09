@@ -22,6 +22,13 @@ export function AppHeader({
     sabtuan = totals(data, "Sabtuan");
   const amount = (value: number) =>
     new Intl.NumberFormat("id-ID").format(value);
+  const today = new Intl.DateTimeFormat("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Asia/Jakarta",
+  }).format(new Date());
   return (
     <header className="relative h-[350px] overflow-hidden bg-indigo-900 text-white">
       <Image src="/racket.png" alt="" fill priority className="object-cover" />
@@ -74,16 +81,24 @@ export function AppHeader({
             </p>
           </div>
         </div>
-        <div className="flex items-start gap-1">
-          <span className="text-[13px] leading-[14px] text-white/80">Rp</span>
-          <div>
-            <p className="text-[28px] font-bold leading-[34px]">
-              {amount(sabtuan.balance)}
-            </p>
-            <p className="text-[13px] leading-[14px] text-white/80">
-              Saldo Sabtuan
-            </p>
+        <div className="flex items-start justify-between">
+          <div className="flex items-start gap-1">
+            <span className="text-[13px] leading-[14px] text-white/80">Rp</span>
+            <div>
+              <p className="text-[28px] font-bold leading-[34px]">
+                {amount(sabtuan.balance)}
+              </p>
+              <p className="text-[13px] leading-[14px] text-white/80">
+                Saldo Sabtuan
+              </p>
+            </div>
           </div>
+          <p
+            suppressHydrationWarning
+            className="max-w-[168px] pt-1 text-right text-[13px] font-semibold leading-[18px] text-white"
+          >
+            {today}
+          </p>
         </div>
         {/* <div className="grid grid-cols-2 gap-4 pt-4">
           <Balance value={rabuan.balance} label="Saldo Rabuan" />
