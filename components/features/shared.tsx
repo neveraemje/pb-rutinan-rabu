@@ -81,7 +81,7 @@ export function AppHeader({
             </p>
           </div>
         </div>
-        <div className="flex items-start justify-between">
+        <div className="flex items-end justify-between">
           <div className="flex items-start gap-1">
             <span className="text-[13px] leading-[14px] text-white/80">Rp</span>
             <div>
@@ -95,7 +95,7 @@ export function AppHeader({
           </div>
           <p
             suppressHydrationWarning
-            className="max-w-[168px] pt-1 text-right text-[13px] font-semibold leading-[18px] text-white"
+            className="whitespace-nowrap text-right text-[12px] font-semibold leading-[14px] text-white"
           >
             {today}
           </p>
