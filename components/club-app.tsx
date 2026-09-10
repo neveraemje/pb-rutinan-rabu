@@ -8,7 +8,13 @@ import type {
   Session,
   TrainingType,
 } from "@/lib/types";
-import { cloneSeed, loadData, resetData, saveData } from "@/lib/storage";
+import {
+  cloneSeed,
+  isEmptyData,
+  loadData,
+  resetData,
+  saveData,
+} from "@/lib/storage";
 import { loadClubData, saveClubData } from "@/lib/database";
 import { sessionHasPayments } from "@/lib/calculations";
 import { Button, Sheet } from "@/components/ui-kit";
@@ -127,6 +133,8 @@ export default function ClubApp() {
     editingSession: Boolean(sessionForm.id),
     editingExpense: Boolean(expenseForm.id),
   });
+  const remoteWritableRef = useRef(false);
+  const skipInitialSaveRef = useRef(true);
   useEffect(() => {
     navigationRef.current = {
       tab,
@@ -188,13 +196,27 @@ export default function ClubApp() {
   }, []);
   useEffect(() => {
     let active = true;
+    const local = loadData();
     void loadClubData()
       .then((remote) => {
-        if (active) setData(remote ?? loadData());
+        if (!active) return;
+        if (!remote) {
+          setData(local);
+          setToast("Database belum memiliki data, salinan lokal dipertahankan");
+          return;
+        }
+        if (isEmptyData(remote) && !isEmptyData(local)) {
+          setData(local);
+          setToast("Database kosong, salinan lokal tidak ditimpa");
+          return;
+        }
+        remoteWritableRef.current = true;
+        setData(remote);
+        saveData(remote);
       })
       .catch(() => {
         if (active) {
-          setData(loadData());
+          setData(local);
           setToast("Database tidak tersedia, memakai data lokal");
         }
       })
@@ -207,10 +229,20 @@ export default function ClubApp() {
   }, []);
   useEffect(() => {
     if (!ready) return;
+    if (skipInitialSaveRef.current) {
+      skipInitialSaveRef.current = false;
+      return;
+    }
     saveData(data);
-    void saveClubData(data).catch(() =>
-      setToast("Gagal menyimpan ke database"),
-    );
+    if (!remoteWritableRef.current) return;
+    void saveClubData(data).catch((saveError: unknown) => {
+      setToast(
+        saveError instanceof Error &&
+          saveError.message === "REMOTE_DATA_CHANGED"
+          ? "Data di perangkat lain lebih baru, muat ulang aplikasi"
+          : "Gagal menyimpan ke database",
+      );
+    });
   }, [data, ready]);
   useEffect(() => {
     if (!toast) return;
