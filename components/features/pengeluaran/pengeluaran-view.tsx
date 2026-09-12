@@ -9,7 +9,12 @@ import {
   Upload,
 } from "lucide-react";
 import type { ClubData, Expense, TrainingType } from "@/lib/types";
-import { formatDate, sessionIncome, shortRupiah } from "@/lib/calculations";
+import {
+  formatDate,
+  sessionIncome,
+  shortRupiah,
+  totals,
+} from "@/lib/calculations";
 import { Empty } from "@/components/ui-kit";
 import { FloatingCalendar, TypePills } from "@/components/features/shared";
 
@@ -28,7 +33,9 @@ export function PengeluaranView({
   onAdd: () => void;
   onReset: () => void;
 }) {
-  const [kind, setKind] = useState<"in" | "out">("in");
+  const [kind, setKind] = useState<"all" | "in" | "out">("all");
+  const rabuanBalance = totals(data, "Rabuan").balance;
+  const sabtuanBalance = totals(data, "Sabtuan").balance;
   const income = data.sessions
     .filter((session) => filter === "Semua" || session.type === filter)
     .map((session) => ({ ...session, amount: sessionIncome(data, session.id) }))
@@ -37,13 +44,36 @@ export function PengeluaranView({
   const expenses = data.expenses
     .filter((expense) => filter === "Semua" || expense.type === filter)
     .sort((a, b) => b.date.localeCompare(a.date));
+  const transactions = [
+    ...income.map((session) => ({
+      id: session.id,
+      kind: "in" as const,
+      date: session.date,
+      title: formatDate(session.date),
+      subtitle: session.venue,
+      amount: session.amount,
+    })),
+    ...expenses.map((expense) => ({
+      id: expense.id,
+      kind: "out" as const,
+      date: expense.date,
+      title: expense.title,
+      subtitle: formatDate(expense.date),
+      amount: expense.amount,
+    })),
+  ]
+    .filter((transaction) => kind === "all" || transaction.kind === kind)
+    .sort(
+      (a, b) =>
+        b.date.localeCompare(a.date) || a.kind.localeCompare(b.kind),
+    );
   const emptyScope = filter === "Semua" ? "semua latihan" : `latihan ${filter}`;
   return (
     <div className="min-h-[calc(100dvh-88px)] bg-[#f9f9f9]">
-      <header className="h-[129px] border-b border-[#e7e7e7] bg-white px-4 pt-8">
+      <header className="border-b border-[#e7e7e7] bg-white px-4 pb-0 pt-8">
         <div className="flex h-9 items-center">
           <h1 className="flex-1 text-xl font-bold">Keuangan</h1>
-          {kind === "out" && (
+          {kind !== "in" && (
             <button
               onClick={onAdd}
               className="flex h-9 items-center gap-1 rounded-full border border-[#dedede] bg-white px-3 text-sm text-[#5f5f5f]"
@@ -52,16 +82,26 @@ export function PengeluaranView({
             </button>
           )}
         </div>
-        <div className="mt-4 grid h-11 grid-cols-2">
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <BalanceCard label="Saldo Rabuan" value={rabuanBalance} />
+          <BalanceCard label="Saldo Sabtuan" value={sabtuanBalance} />
+        </div>
+        <div className="mt-4 grid h-11 grid-cols-3">
+          <button
+            onClick={() => setKind("all")}
+            className={`border-b-2 text-xs font-bold ${kind === "all" ? "border-[#5b5ce8] text-[#202020]" : "border-transparent text-[#8b8b8b]"}`}
+          >
+            Semua Kategori
+          </button>
           <button
             onClick={() => setKind("in")}
-            className={`border-b-2 text-sm font-bold ${kind === "in" ? "border-[#5b5ce8] text-[#202020]" : "border-transparent text-[#8b8b8b]"}`}
+            className={`border-b-2 text-xs font-bold ${kind === "in" ? "border-[#5b5ce8] text-[#202020]" : "border-transparent text-[#8b8b8b]"}`}
           >
             Pemasukan
           </button>
           <button
             onClick={() => setKind("out")}
-            className={`border-b-2 text-sm font-bold ${kind === "out" ? "border-[#5b5ce8] text-[#202020]" : "border-transparent text-[#8b8b8b]"}`}
+            className={`border-b-2 text-xs font-bold ${kind === "out" ? "border-[#5b5ce8] text-[#202020]" : "border-transparent text-[#8b8b8b]"}`}
           >
             Pengeluaran
           </button>
@@ -79,62 +119,51 @@ export function PengeluaranView({
         ))}
       </div>
       <div>
-        {kind === "in" ? (
-          income.length ? (
-            income.map((session, index) => (
-              <button
-                key={session.id}
-                className={`flex h-[72px] w-full items-center gap-2 px-4 text-left ${index % 2 ? "bg-[#f2f2f2]" : "bg-white"}`}
-              >
-                <span className="grid size-10 place-items-center rounded-full bg-[#bfffd4] text-[#039a12]">
-                  <Download size={20} />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <b className="block truncate font-medium">
-                    {formatDate(session.date)}
-                  </b>
-                  <span className="block truncate text-xs text-[#8b8b8b]">
-                    {session.venue}
-                  </span>
-                </span>
-                <span className="text-sm text-[#039a12]">
-                  +{shortRupiah(session.amount)}
-                </span>
-              </button>
-            ))
-          ) : (
-            <Empty
-              icon={<Download />}
-              title="Belum ada pemasukan"
-              text={`Belum ada pembayaran untuk ${emptyScope}.`}
-            />
-          )
-        ) : expenses.length ? (
-          expenses.map((expense, index) => (
+        {transactions.length ? (
+          transactions.map((transaction, index) => (
             <button
-              key={expense.id}
-              onClick={() => onExpense(expense.id)}
+              key={`${transaction.kind}-${transaction.id}`}
+              onClick={() =>
+                transaction.kind === "out" && onExpense(transaction.id)
+              }
               className={`flex h-[72px] w-full items-center gap-2 px-4 text-left ${index % 2 ? "bg-[#f2f2f2]" : "bg-white"}`}
             >
-              <span className="grid size-10 place-items-center rounded-full bg-[#ffe8e6] text-[#ee2737]">
-                <Upload size={20} />
+              <span
+                className={`grid size-10 shrink-0 place-items-center rounded-full ${transaction.kind === "in" ? "bg-[#bfffd4] text-[#039a12]" : "bg-[#ffe8e6] text-[#ee2737]"}`}
+              >
+                {transaction.kind === "in" ? (
+                  <Download size={20} />
+                ) : (
+                  <Upload size={20} />
+                )}
               </span>
               <span className="min-w-0 flex-1">
-                <b className="block truncate font-medium">{expense.title}</b>
-                <span className="block text-xs text-[#8b8b8b]">
-                  {formatDate(expense.date)}
+                <b className="block truncate font-medium">
+                  {transaction.title}
+                </b>
+                <span className="block truncate text-xs text-[#8b8b8b]">
+                  {transaction.subtitle}
                 </span>
               </span>
-              <span className="text-sm text-[#ee2737]">
-                -{shortRupiah(expense.amount)}
+              <span
+                className={`shrink-0 text-sm ${transaction.kind === "in" ? "text-[#039a12]" : "text-[#ee2737]"}`}
+              >
+                {transaction.kind === "in" ? "+" : "-"}
+                {shortRupiah(transaction.amount)}
               </span>
             </button>
           ))
         ) : (
           <Empty
-            icon={<Upload />}
-            title="Belum ada pengeluaran"
-            text={`Belum ada pengeluaran untuk ${emptyScope}.`}
+            icon={kind === "out" ? <Upload /> : <Download />}
+            title={
+              kind === "all"
+                ? "Belum ada transaksi"
+                : kind === "in"
+                  ? "Belum ada pemasukan"
+                  : "Belum ada pengeluaran"
+            }
+            text={`Belum ada transaksi untuk ${emptyScope}.`}
           />
         )}
       </div>
@@ -144,6 +173,17 @@ export function PengeluaranView({
       >
         <RotateCcw size={14} /> Reset Data Demo
       </button> */}
+    </div>
+  );
+}
+
+function BalanceCard({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-2xl bg-[#f0f2ff] px-3 py-3">
+      <p className="text-[11px] font-medium text-[#6f6f6f]">{label}</p>
+      <p className="mt-1 truncate text-lg font-bold text-[#3929b5]">
+        {shortRupiah(value)}
+      </p>
     </div>
   );
 }
