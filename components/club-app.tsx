@@ -22,7 +22,7 @@ import {
   AppBottomNav,
   AppHeader,
   type AppTab,
-  TODAY,
+  todayJakarta,
   uid,
 } from "@/components/features/shared";
 import { HomeView } from "@/components/features/home/home-view";
@@ -65,7 +65,7 @@ type SheetName =
 const blankSession = (): Session => ({
   id: "",
   type: "Rabuan",
-  date: "2026-09-09",
+  date: todayJakarta(),
   time: "20:00",
   venue: "GOR Platinum Karya Timur",
   fee: 30000,
@@ -75,7 +75,7 @@ const blankExpense = (): Expense => ({
   id: "",
   title: "",
   amount: 0,
-  date: TODAY,
+  date: todayJakarta(),
   category: "Lapangan",
   type: "Rabuan",
 });
@@ -84,7 +84,7 @@ const blankMember = (): Member => ({
   name: "",
   phone: "",
   active: true,
-  joinedAt: TODAY,
+  joinedAt: todayJakarta(),
 });
 const blankPayment = (): Payment => ({
   id: "",
@@ -92,7 +92,7 @@ const blankPayment = (): Payment => ({
   memberId: "",
   amount: 0,
   method: "Transfer",
-  date: TODAY,
+  date: todayJakarta(),
 });
 
 export default function ClubApp() {
@@ -277,7 +277,7 @@ export default function ClubApp() {
       name: name.trim(),
       phone: "-",
       active: true,
-      joinedAt: TODAY,
+      joinedAt: todayJakarta(),
     };
     setData((d) => ({ ...d, members: [...d.members, member] }));
     setSessionForm((s) => ({
@@ -292,7 +292,7 @@ export default function ClubApp() {
       name: name.trim(),
       phone: "-",
       active: true,
-      joinedAt: TODAY,
+      joinedAt: todayJakarta(),
     };
     setData((d) => ({ ...d, members: [...d.members, member] }));
     setToast("Anggota baru ditambahkan");
@@ -354,7 +354,7 @@ export default function ClubApp() {
         ...memberForm,
         name: memberForm.name.trim(),
         phone: memberForm.phone || "-",
-        joinedAt: memberForm.joinedAt || TODAY,
+        joinedAt: memberForm.joinedAt || todayJakarta(),
       };
     setData((d) => ({
       ...d,

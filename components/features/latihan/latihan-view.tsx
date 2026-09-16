@@ -32,7 +32,7 @@ import {
   Avatar,
   FloatingCalendar,
   PaymentStatus,
-  TODAY,
+  todayJakarta,
   TypePills,
 } from "@/components/features/shared";
 
@@ -248,7 +248,7 @@ export function CreateSessionScreen({
       </footer>
       {calendarOpen && (
         <FloatingCalendar
-          date={form.date || TODAY}
+          date={form.date || todayJakarta()}
           onClose={() => setCalendarOpen(false)}
           onSelect={(date) => {
             setForm({ ...form, date });

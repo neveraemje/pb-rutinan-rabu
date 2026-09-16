@@ -2,11 +2,21 @@
 
 import Image from "next/image";
 import { Download } from "lucide-react";
+import { useEffect, useState } from "react";
 import type { ClubData, TrainingType } from "@/lib/types";
 import { paymentStatus, totals } from "@/lib/calculations";
 
 export type AppTab = "Beranda" | "Jadwal" | "QRIS" | "Anggota" | "Keuangan";
-export const TODAY = "2026-09-06";
+export const todayJakarta = (date = new Date()) => {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: "Asia/Jakarta",
+  }).formatToParts(date);
+  const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${value.year}-${value.month}-${value.day}`;
+};
 export const uid = (prefix: string) =>
   `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
@@ -22,13 +32,28 @@ export function AppHeader({
     sabtuan = totals(data, "Sabtuan");
   const amount = (value: number) =>
     new Intl.NumberFormat("id-ID").format(value);
+  const [currentTime, setCurrentTime] = useState(() => new Date());
+  useEffect(() => {
+    const refreshDate = () => setCurrentTime(new Date());
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") refreshDate();
+    };
+    const timer = window.setInterval(refreshDate, 30_000);
+    window.addEventListener("focus", refreshDate);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refreshDate);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
+  }, []);
   const today = new Intl.DateTimeFormat("id-ID", {
     weekday: "long",
     day: "numeric",
     month: "long",
     year: "numeric",
     timeZone: "Asia/Jakarta",
-  }).format(new Date());
+  }).format(currentTime);
   return (
     <header className="relative h-[350px] overflow-hidden bg-indigo-900 text-white">
       <Image src="/racket.png" alt="" fill priority className="object-cover" />
@@ -280,7 +305,7 @@ export function FloatingCalendar({
   onSelect: (date: string) => void;
   onClose: () => void;
 }) {
-  const current = new Date(`${date || TODAY}T00:00:00`),
+  const current = new Date(`${date || todayJakarta()}T00:00:00`),
     year = current.getFullYear(),
     month = current.getMonth();
   const cells = [
