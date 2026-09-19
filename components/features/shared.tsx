@@ -205,19 +205,24 @@ export function AppBottomNav({
   return (
     <nav className="fixed bottom-0 left-1/2 z-40 grid h-[88px] w-full max-w-[393px] -translate-x-1/2 grid-cols-5 border-t border-[#e7e7e7] bg-white/90 pb-6 backdrop-blur-[10px]">
       {items.map((item) => (
-        item.center && !canCreate ? (
-          <div key={item.label} aria-hidden="true" />
-        ) : (
         <button
           key={item.label}
+          disabled={item.center && !canCreate}
+          aria-label={
+            item.center && !canCreate
+              ? "Latihan hanya dapat ditambahkan oleh admin"
+              : item.label
+          }
           onClick={() =>
             item.center ? onCreate() : item.tab && setTab(item.tab)
           }
-          className="relative h-16 text-xs leading-4 text-[#1a1a1a]"
+          className="relative h-16 text-xs leading-4 text-[#1a1a1a] disabled:cursor-not-allowed"
         >
           {item.center ? (
             <span className="absolute -top-[18px] grid h-14 w-[79px] place-items-center rounded-[40px] bg-gradient-to-b from-[#fafafa] to-[#dfdfe0] shadow-[inset_0_2px_1px_rgb(255_255_255/0.7)]">
-              <span className="grid h-11 w-[67px] place-items-center rounded-[40px] border border-[#3929b5] bg-gradient-to-b from-[#7d87ff] to-[#3929b5] text-[32px] font-light leading-none text-white shadow-[0_-4px_10px_rgb(0_0_0/0.15)]">
+              <span
+                className={`grid h-11 w-[67px] place-items-center rounded-[40px] border text-[32px] font-light leading-none text-white shadow-[0_-4px_10px_rgb(0_0_0/0.15)] ${canCreate ? "border-[#3929b5] bg-gradient-to-b from-[#7d87ff] to-[#3929b5]" : "border-[#a9a9af] bg-gradient-to-b from-[#c9c9ce] to-[#8e8e96]"}`}
+              >
                 +
               </span>
             </span>
@@ -241,7 +246,6 @@ export function AppBottomNav({
             {item.label}
           </span>
         </button>
-        )
       ))}
     </nav>
   );
