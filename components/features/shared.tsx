@@ -17,6 +17,14 @@ export const todayJakarta = (date = new Date()) => {
   const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
   return `${value.year}-${value.month}-${value.day}`;
 };
+const fullDateJakarta = (date = new Date()) =>
+  new Intl.DateTimeFormat("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Asia/Jakarta",
+  }).format(date);
 export const uid = (prefix: string) =>
   `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
@@ -32,28 +40,24 @@ export function AppHeader({
     sabtuan = totals(data, "Sabtuan");
   const amount = (value: number) =>
     new Intl.NumberFormat("id-ID").format(value);
-  const [currentTime, setCurrentTime] = useState(() => new Date());
+  const [today, setToday] = useState(() => fullDateJakarta());
   useEffect(() => {
-    const refreshDate = () => setCurrentTime(new Date());
+    const refreshDate = () => setToday(fullDateJakarta());
     const refreshWhenVisible = () => {
       if (document.visibilityState === "visible") refreshDate();
     };
-    const timer = window.setInterval(refreshDate, 30_000);
+    refreshDate();
+    const timer = window.setInterval(refreshDate, 15_000);
     window.addEventListener("focus", refreshDate);
+    window.addEventListener("pageshow", refreshDate);
     document.addEventListener("visibilitychange", refreshWhenVisible);
     return () => {
       window.clearInterval(timer);
       window.removeEventListener("focus", refreshDate);
+      window.removeEventListener("pageshow", refreshDate);
       document.removeEventListener("visibilitychange", refreshWhenVisible);
     };
   }, []);
-  const today = new Intl.DateTimeFormat("id-ID", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    timeZone: "Asia/Jakarta",
-  }).format(currentTime);
   return (
     <header className="relative h-[350px] overflow-hidden bg-indigo-900 text-white">
       <Image src="/racket.png" alt="" fill priority className="object-cover" />
