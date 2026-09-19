@@ -47,6 +47,9 @@ import {
 } from "@/components/features/latihan/latihan-view";
 import { QrisView } from "@/components/features/qris/qris-view";
 import { InstallAppSheet } from "@/components/features/pwa/install-app-sheet";
+import { AdminLoginSheet } from "@/components/features/auth/admin-login-sheet";
+
+const ADMIN_SESSION_KEY = "pb-rutinan-rabu-admin";
 
 type SheetName =
   | "session"
@@ -61,6 +64,7 @@ type SheetName =
   | "deleteParticipant"
   | "reset"
   | "install"
+  | "adminLogin"
   | null;
 const blankSession = (): Session => ({
   id: "",
@@ -100,7 +104,9 @@ export default function ClubApp() {
     [ready, setReady] = useState(false),
     [tab, setTabState] = useState<AppTab>("Beranda"),
     [sheet, setSheetState] = useState<SheetName>(null),
-    [filter, setFilter] = useState<"Semua" | TrainingType>("Semua");
+    [filter, setFilter] = useState<"Semua" | TrainingType>("Semua"),
+    [isAdmin, setIsAdmin] = useState(false);
+  const pendingAdminActionRef = useRef<null | (() => void)>(null);
   const transition = (update: () => void) => {
     if (
       typeof document === "undefined" ||
@@ -135,6 +141,13 @@ export default function ClubApp() {
   });
   const remoteWritableRef = useRef(false);
   const skipInitialSaveRef = useRef(true);
+  useEffect(() => {
+    const timer = window.setTimeout(
+      () => setIsAdmin(sessionStorage.getItem(ADMIN_SESSION_KEY) === "true"),
+      0,
+    );
+    return () => window.clearTimeout(timer);
+  }, []);
   useEffect(() => {
     navigationRef.current = {
       tab,
@@ -173,6 +186,7 @@ export default function ClubApp() {
         case "sessionDetail":
         case "reset":
         case "install":
+        case "adminLogin":
           setSheetState(null);
           break;
         default:
@@ -256,6 +270,32 @@ export default function ClubApp() {
     setToast(message);
     setError("");
     setSheet(null);
+  };
+  const requireAdmin = (action: () => void) => {
+    if (isAdmin) {
+      action();
+      return;
+    }
+    pendingAdminActionRef.current = action;
+    setError("");
+    setSheet("adminLogin");
+  };
+  const loginAdmin = (username: string, password: string) => {
+    if (username !== "admin" || password !== "12345678") return false;
+    sessionStorage.setItem(ADMIN_SESSION_KEY, "true");
+    setIsAdmin(true);
+    const pendingAction = pendingAdminActionRef.current;
+    pendingAdminActionRef.current = null;
+    setToast("Login admin berhasil");
+    if (pendingAction) pendingAction();
+    else setSheet(null);
+    return true;
+  };
+  const logoutAdmin = () => {
+    sessionStorage.removeItem(ADMIN_SESSION_KEY);
+    pendingAdminActionRef.current = null;
+    setIsAdmin(false);
+    setToast("Mode admin dinonaktifkan");
   };
   const openSession = (session?: Session) => {
     const fresh = blankSession();
@@ -502,7 +542,14 @@ export default function ClubApp() {
   return (
     <main className="app-shell relative mx-auto min-h-dvh w-full max-w-[393px] overflow-x-hidden bg-[#f7f7fb] pb-24 text-slate-900 shadow-[0_0_40px_rgb(15_23_42/0.08)]">
       {hasHeader && (
-        <AppHeader data={data} onInstall={() => setSheet("install")} />
+        <AppHeader
+          data={data}
+          onInstall={() => setSheet("install")}
+          isAdmin={isAdmin}
+          onAdmin={() =>
+            isAdmin ? logoutAdmin() : requireAdmin(() => undefined)
+          }
+        />
       )}
       <div
         className={`relative z-10 min-h-[65dvh] bg-white pb-4 ${hasHeader ? "-mt-18 rounded-t-[28px] px-4 pt-3" : "px-0 pt-0"}`}
@@ -524,7 +571,7 @@ export default function ClubApp() {
             data={data}
             filter={filter}
             setFilter={setFilter}
-            onAdd={() => openSession()}
+            onAdd={() => requireAdmin(() => openSession())}
             onDetail={(id) => {
               setSelectedSession(id);
               setSheet("sessionDetail");
@@ -540,8 +587,8 @@ export default function ClubApp() {
               setSelectedExpense(id);
               setSheet("expenseDetail");
             }}
-            onAdd={() => openExpense()}
-            onReset={() => setSheet("reset")}
+            onAdd={() => requireAdmin(() => openExpense())}
+            onReset={() => requireAdmin(() => setSheet("reset"))}
           />
         )}{" "}
         {tab === "QRIS" && <QrisView />}
@@ -549,11 +596,13 @@ export default function ClubApp() {
           <AnggotaView
             data={data}
             onBack={() => setTab("Beranda")}
-            onAdd={() => openMember()}
-            onEdit={openMember}
+            onAdd={() => requireAdmin(() => openMember())}
+            onEdit={(member) => requireAdmin(() => openMember(member))}
             onDelete={(id) => {
-              setSelectedMember(id);
-              setSheet("deleteMember");
+              requireAdmin(() => {
+                setSelectedMember(id);
+                setSheet("deleteMember");
+              });
             }}
           />
         )}
@@ -565,7 +614,7 @@ export default function ClubApp() {
           setTab(next);
           setFilter("Semua");
         }}
-        onCreate={() => openSession()}
+        onCreate={() => requireAdmin(() => openSession())}
       />
       {toast && (
         <div className="app-toast fixed bottom-24 left-1/2 z-[70] -translate-x-1/2 whitespace-nowrap rounded-full bg-slate-900 px-4 py-2 text-sm text-white shadow-lg">
@@ -603,8 +652,8 @@ export default function ClubApp() {
           open={sheet === "expenseDetail"}
           expense={activeExpense}
           onClose={() => setSheet(null)}
-          onEdit={() => openExpense(activeExpense)}
-          onDelete={removeExpense}
+          onEdit={() => requireAdmin(() => openExpense(activeExpense))}
+          onDelete={() => requireAdmin(removeExpense)}
         />
       )}{" "}
       {activeSession && (
@@ -637,12 +686,16 @@ export default function ClubApp() {
           data={data}
           session={activeSession}
           onClose={() => setSheet(null)}
-          onEdit={() => openSession(activeSession)}
-          onDelete={() => setSheet("deleteSession")}
-          onPayment={openPayment}
+          onEdit={() => requireAdmin(() => openSession(activeSession))}
+          onDelete={() => requireAdmin(() => setSheet("deleteSession"))}
+          onPayment={(sessionId, memberId, payment) =>
+            requireAdmin(() => openPayment(sessionId, memberId, payment))
+          }
           onParticipants={() => {
-            setError("");
-            setSheet("participants");
+            requireAdmin(() => {
+              setError("");
+              setSheet("participants");
+            });
           }}
         />
       )}{" "}
@@ -708,6 +761,14 @@ export default function ClubApp() {
         open={sheet === "install"}
         onClose={() => setSheet(null)}
         onToast={setToast}
+      />
+      <AdminLoginSheet
+        open={sheet === "adminLogin"}
+        onClose={() => {
+          pendingAdminActionRef.current = null;
+          setSheet(null);
+        }}
+        onLogin={loginAdmin}
       />
     </main>
   );

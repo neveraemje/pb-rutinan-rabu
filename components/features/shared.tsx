@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Download } from "lucide-react";
+import { Download, LockKeyhole, UserRoundCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { ClubData, TrainingType } from "@/lib/types";
 import { paymentStatus, totals } from "@/lib/calculations";
@@ -31,9 +31,13 @@ export const uid = (prefix: string) =>
 export function AppHeader({
   data,
   onInstall,
+  isAdmin,
+  onAdmin,
 }: {
   data: ClubData;
   onInstall: () => void;
+  isAdmin: boolean;
+  onAdmin: () => void;
 }) {
   const all = totals(data),
     rabuan = totals(data, "Rabuan"),
@@ -60,7 +64,14 @@ export function AppHeader({
   }, []);
   return (
     <header className="relative h-[350px] overflow-hidden bg-indigo-900 text-white">
-      <Image src="/racket.png" alt="" fill priority className="object-cover" />
+      <Image
+        src="/racket.png"
+        alt=""
+        fill
+        priority
+        sizes="393px"
+        className="object-cover"
+      />
       {/* <Image
         src="/home-shuttle-watermark.svg"
         alt=""
@@ -85,6 +96,15 @@ export function AppHeader({
         className="absolute right-4 top-8 grid size-10 place-items-center rounded-full bg-white/15 text-white backdrop-blur-sm transition hover:bg-white/25 active:scale-95"
       >
         <Download size={21} />
+      </button>
+      <button
+        type="button"
+        onClick={onAdmin}
+        aria-label={isAdmin ? "Keluar dari mode admin" : "Login admin"}
+        title={isAdmin ? "Keluar dari mode admin" : "Login admin"}
+        className={`absolute right-16 top-8 grid size-10 place-items-center rounded-full text-white backdrop-blur-sm transition active:scale-95 ${isAdmin ? "bg-emerald-500/80" : "bg-white/15 hover:bg-white/25"}`}
+      >
+        {isAdmin ? <UserRoundCheck size={21} /> : <LockKeyhole size={20} />}
       </button>
 
       <div className="absolute inset-x-6 top-[77px] flex flex-col gap-6 mt-14">
