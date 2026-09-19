@@ -38,12 +38,14 @@ import {
 
 export function LatihanView({
   data,
+  canEdit,
   filter,
   setFilter,
   onAdd,
   onDetail,
 }: {
   data: ClubData;
+  canEdit: boolean;
   filter: string;
   setFilter: (value: "Semua" | TrainingType) => void;
   onAdd: () => void;
@@ -54,9 +56,9 @@ export function LatihanView({
     .sort((a, b) => sessionDateTime(b) - sessionDateTime(a));
   return (
     <div>
-      <div className="hidden">
+      {canEdit && <div className="hidden">
         <button onClick={onAdd}>Tambah jadwal</button>
-      </div>
+      </div>}
       <FilterPills value={filter} onChange={setFilter} />
       <div className="mt-2">
         {sessions.length ? (
@@ -272,6 +274,7 @@ export function DetailSessionScreen({
   open,
   data,
   session,
+  canEdit,
   onClose,
   onEdit,
   onDelete,
@@ -281,6 +284,7 @@ export function DetailSessionScreen({
   open: boolean;
   data: ClubData;
   session: Session;
+  canEdit: boolean;
   onClose: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -355,12 +359,12 @@ export function DetailSessionScreen({
             <ArrowLeft />
           </button>
           <div className="flex-1" />
-          <button
+          {canEdit && <button
             onClick={onEdit}
             className="flex h-10 items-center gap-2 rounded-full bg-white px-4 font-semibold shadow"
           >
             <Pencil size={20} /> Edit
-          </button>
+          </button>}
           <button
             onClick={captureFullDetail}
             disabled={capturing}
@@ -374,12 +378,12 @@ export function DetailSessionScreen({
               <Camera size={20} />
             )}
           </button>
-          <button
+          {canEdit && <button
             onClick={onDelete}
             className="ml-2 grid size-10 place-items-center rounded-full bg-white text-red-500 shadow"
           >
             <Trash2 size={20} />
-          </button>
+          </button>}
         </div>
         <div className="absolute bottom-3 left-4 flex h-10 max-w-[250px] items-center gap-2 rounded-full bg-white/70 px-4 font-semibold">
           <Image src="/home-10.svg" alt="" width={24} height={24} />
@@ -404,12 +408,12 @@ export function DetailSessionScreen({
         <div className="flex h-[68px] items-center gap-2 px-4">
           <UsersRound />
           <b className="flex-1">Peserta</b>
-          <button
+          {canEdit && <button
             onClick={onParticipants}
             className="flex h-10 items-center gap-1 rounded-full border px-3 text-sm"
           >
             <Plus size={16} /> Tambah Peserta
-          </button>
+          </button>}
         </div>
         {session.participantIds.map((id) => {
           const member = data.members.find((m) => m.id === id);
@@ -422,8 +426,9 @@ export function DetailSessionScreen({
           return (
             <button
               key={id}
+              disabled={!canEdit}
               onClick={() => onPayment(session.id, id)}
-              className="flex min-h-[68px] w-full items-center gap-2 py-3 pl-11 pr-4 text-left"
+              className="flex min-h-[68px] w-full items-center gap-2 py-3 pl-11 pr-4 text-left disabled:cursor-default"
             >
               <Avatar name={member.name} />
               <span className="min-w-0 flex-1">
@@ -439,7 +444,7 @@ export function DetailSessionScreen({
                 fee={session.fee}
                 recorded={recorded}
               />
-              <ChevronRight />
+              {canEdit && <ChevronRight />}
             </button>
           );
         })}

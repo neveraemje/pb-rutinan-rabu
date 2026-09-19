@@ -20,6 +20,7 @@ import { FloatingCalendar, TypePills } from "@/components/features/shared";
 
 export function PengeluaranView({
   data,
+  canEdit,
   filter,
   setFilter,
   onExpense,
@@ -27,6 +28,7 @@ export function PengeluaranView({
   onReset,
 }: {
   data: ClubData;
+  canEdit: boolean;
   filter: string;
   setFilter: (type: "Semua" | TrainingType) => void;
   onExpense: (id: string) => void;
@@ -73,7 +75,7 @@ export function PengeluaranView({
       <header className="border-b border-[#e7e7e7] bg-white px-4 pb-0 pt-8">
         <div className="flex h-9 items-center">
           <h1 className="flex-1 text-xl font-bold">Keuangan</h1>
-          {kind !== "in" && (
+          {canEdit && kind !== "in" && (
             <button
               onClick={onAdd}
               className="flex h-9 items-center gap-1 rounded-full border border-[#dedede] bg-white px-3 text-sm text-[#5f5f5f]"
@@ -191,12 +193,14 @@ function BalanceCard({ label, value }: { label: string; value: number }) {
 export function ExpenseDetailSheet({
   open,
   expense,
+  canEdit,
   onClose,
   onEdit,
   onDelete,
 }: {
   open: boolean;
   expense: Expense;
+  canEdit: boolean;
   onClose: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -222,7 +226,7 @@ export function ExpenseDetailSheet({
           <b className="truncate text-lg">{expense.title}</b>
         </div>
       </div>
-      <footer className="absolute inset-x-0 bottom-0 border-t border-[#e7e7e7] bg-white/90 px-4 pb-8 pt-4">
+      {canEdit && <footer className="absolute inset-x-0 bottom-0 border-t border-[#e7e7e7] bg-white/90 px-4 pb-8 pt-4">
         <div className="grid grid-cols-2 gap-[10px]">
           <button
             onClick={onDelete}
@@ -237,7 +241,7 @@ export function ExpenseDetailSheet({
             Ubah
           </button>
         </div>
-      </footer>
+      </footer>}
     </ExpenseShell>
   );
 }

@@ -183,10 +183,12 @@ export function AppBottomNav({
   tab,
   setTab,
   onCreate,
+  canCreate,
 }: {
   tab: AppTab;
   setTab: (tab: AppTab) => void;
   onCreate: () => void;
+  canCreate: boolean;
 }) {
   const items: {
     label: string;
@@ -203,6 +205,9 @@ export function AppBottomNav({
   return (
     <nav className="fixed bottom-0 left-1/2 z-40 grid h-[88px] w-full max-w-[393px] -translate-x-1/2 grid-cols-5 border-t border-[#e7e7e7] bg-white/90 pb-6 backdrop-blur-[10px]">
       {items.map((item) => (
+        item.center && !canCreate ? (
+          <div key={item.label} aria-hidden="true" />
+        ) : (
         <button
           key={item.label}
           onClick={() =>
@@ -236,6 +241,7 @@ export function AppBottomNav({
             {item.label}
           </span>
         </button>
+        )
       ))}
     </nav>
   );

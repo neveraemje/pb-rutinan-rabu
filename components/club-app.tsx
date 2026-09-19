@@ -143,7 +143,13 @@ export default function ClubApp() {
   const skipInitialSaveRef = useRef(true);
   useEffect(() => {
     const timer = window.setTimeout(
-      () => setIsAdmin(sessionStorage.getItem(ADMIN_SESSION_KEY) === "true"),
+      () => {
+        const saved =
+          localStorage.getItem(ADMIN_SESSION_KEY) === "true" ||
+          sessionStorage.getItem(ADMIN_SESSION_KEY) === "true";
+        if (saved) localStorage.setItem(ADMIN_SESSION_KEY, "true");
+        setIsAdmin(saved);
+      },
       0,
     );
     return () => window.clearTimeout(timer);
@@ -282,7 +288,8 @@ export default function ClubApp() {
   };
   const loginAdmin = (username: string, password: string) => {
     if (username !== "admin" || password !== "12345678") return false;
-    sessionStorage.setItem(ADMIN_SESSION_KEY, "true");
+    localStorage.setItem(ADMIN_SESSION_KEY, "true");
+    sessionStorage.removeItem(ADMIN_SESSION_KEY);
     setIsAdmin(true);
     const pendingAction = pendingAdminActionRef.current;
     pendingAdminActionRef.current = null;
@@ -292,6 +299,7 @@ export default function ClubApp() {
     return true;
   };
   const logoutAdmin = () => {
+    localStorage.removeItem(ADMIN_SESSION_KEY);
     sessionStorage.removeItem(ADMIN_SESSION_KEY);
     pendingAdminActionRef.current = null;
     setIsAdmin(false);
@@ -569,6 +577,7 @@ export default function ClubApp() {
         {tab === "Jadwal" && (
           <LatihanView
             data={data}
+            canEdit={isAdmin}
             filter={filter}
             setFilter={setFilter}
             onAdd={() => requireAdmin(() => openSession())}
@@ -581,6 +590,7 @@ export default function ClubApp() {
         {tab === "Keuangan" && (
           <PengeluaranView
             data={data}
+            canEdit={isAdmin}
             filter={filter}
             setFilter={setFilter}
             onExpense={(id) => {
@@ -595,6 +605,7 @@ export default function ClubApp() {
         {tab === "Anggota" && (
           <AnggotaView
             data={data}
+            canEdit={isAdmin}
             onBack={() => setTab("Beranda")}
             onAdd={() => requireAdmin(() => openMember())}
             onEdit={(member) => requireAdmin(() => openMember(member))}
@@ -610,6 +621,7 @@ export default function ClubApp() {
       </div>
       <AppBottomNav
         tab={tab}
+        canCreate={isAdmin}
         setTab={(next) => {
           setTab(next);
           setFilter("Semua");
@@ -651,6 +663,7 @@ export default function ClubApp() {
         <ExpenseDetailSheet
           open={sheet === "expenseDetail"}
           expense={activeExpense}
+          canEdit={isAdmin}
           onClose={() => setSheet(null)}
           onEdit={() => requireAdmin(() => openExpense(activeExpense))}
           onDelete={() => requireAdmin(removeExpense)}
@@ -685,6 +698,7 @@ export default function ClubApp() {
           open={sheet === "sessionDetail" || sheet === "deleteSession"}
           data={data}
           session={activeSession}
+          canEdit={isAdmin}
           onClose={() => setSheet(null)}
           onEdit={() => requireAdmin(() => openSession(activeSession))}
           onDelete={() => requireAdmin(() => setSheet("deleteSession"))}
