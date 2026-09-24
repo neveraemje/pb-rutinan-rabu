@@ -7,9 +7,15 @@ export const paidFor = (data: ClubData, sessionId: string, memberId: string) => 
 export const paymentStatus = (paid: number, _fee: number, recorded = paid > 0) => recorded ? "Sudah Bayar" : "Belum Bayar";
 export const sessionIncome = (data: ClubData, sessionId: string) => data.payments.filter(p => p.sessionId === sessionId).reduce((sum, p) => sum + p.amount, 0);
 export const totals = (data: ClubData, type: TrainingType | "Semua" = "Semua", month = "Semua") => {
-  const sessions = data.sessions.filter(s => type === "Semua" || s.type === type);
+  // Income belongs to a training session, so date filters must use the
+  // session date as well. A payment can be recorded later without moving the
+  // session's income into a different financial period.
+  const sessions = data.sessions.filter(s =>
+    (type === "Semua" || s.type === type) &&
+    (month === "Semua" || s.date.startsWith(month))
+  );
   const ids = new Set(sessions.map(s => s.id));
-  const payments = data.payments.filter(p => ids.has(p.sessionId) && (month === "Semua" || p.date.startsWith(month)));
+  const payments = data.payments.filter(p => ids.has(p.sessionId));
   const expenses = data.expenses.filter(e => (type === "Semua" || e.type === type) && (month === "Semua" || e.date.startsWith(month)));
   const income = payments.reduce((sum, p) => sum + p.amount, 0);
   const expense = expenses.reduce((sum, e) => sum + e.amount, 0);

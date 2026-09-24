@@ -269,6 +269,16 @@ export default function ClubApp() {
     const timer = setTimeout(() => setToast(""), 2400);
     return () => clearTimeout(timer);
   }, [toast]);
+  if (!ready) {
+    return (
+      <main className="app-shell relative mx-auto grid min-h-dvh w-full max-w-[393px] place-items-center bg-[#3b66d8] text-white">
+        <div className="text-center">
+          <div className="mx-auto size-10 animate-spin rounded-full border-4 border-white/30 border-t-white" />
+          <p className="mt-4 text-sm font-semibold">Memuat data keuangan…</p>
+        </div>
+      </main>
+    );
+  }
   const activeSession = data.sessions.find((x) => x.id === selectedSession),
     activeMember = data.members.find((x) => x.id === selectedMember),
     activeExpense = data.expenses.find((x) => x.id === selectedExpense);
